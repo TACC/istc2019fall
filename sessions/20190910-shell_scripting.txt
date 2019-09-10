@@ -1,0 +1,448 @@
+Welcome to Stampede2, *please* read these important system notes:
+
+--> Stampede2 user documentation is available at:
+       https://portal.tacc.utexas.edu/user-guides/stampede2
+
+--------------------- Project balances for user eijkhout ----------------------
+| Name           Avail SUs     Expires | Name           Avail SUs     Expires |
+| CompEdu             1000  2020-03-31 | TACC-Juelich-collabo       2100  2020-03-31 |
+| STC19                495  2020-03-31 | sds335                -1  2019-09-30 |
+| P-Bench            19995  2019-12-31 | Introduction-to-Scie         91  2020-05-31 |
+| TG-ASC160050        1512  2020-06-27 | TG-STA160002        1472  2019-12-27 |
+| A-ccsc            124397  2019-12-31 |                                      |
+------------------------ Disk quotas for user eijkhout ------------------------
+| Disk         Usage (GB)     Limit    %Used   File Usage       Limit   %Used |
+| /home1              2.4      10.0    24.48        46272      200000   23.14 |
+| /work             884.6    1024.0    86.39      1252099     3000000   41.74 |
+| /scratch         1711.4       0.0     0.00       178585           0    0.00 |
+-------------------------------------------------------------------------------
+
+Tip 214   (See "module help tacc_tips" for features or how to disable)
+
+   To perform basic diagnostics on your account settings, execute "module load sanitytool" and then run
+      "sanitycheck -v".
+
+[login3 ~:1] mkdir stc2019
+[login3 ~:2] cd !$
+cd stc2019
+[login3 stc2019:3] a=5
+[login3 stc2019:4] a= 5
+-bash: 5: command not found
+[login3 stc2019:5] # no spaces around the assignment!
+[login3 stc2019:5] echo a
+a
+[login3 stc2019:6] echo $a
+5
+[login3 stc2019:7] # get the value o a variable by prefixing with dollar
+[login3 stc2019:7] b="$a $a"
+[login3 stc2019:8] echo $b
+5 5
+[login3 stc2019:9] b=$( 2*a )
+-bash: 2*a: command not found
+[login3 stc2019:10] b=$(( 2*a ))
+[login3 stc2019:11] echo $b
+10
+[login3 stc2019:12] # doing $(( expression )) converts string expression to value
+[login3 stc2019:12] if [ $a = 5 ] ; then echo "a was 5" ; else echo "a was something else" ; fi
+a was 5
+[login3 stc2019:13] # this was not a numerical test: this was string comparison
+[login3 stc2019:13] if [ $a -gt 4 ] ; then echo "a was >4 " ; else echo "a was something else" ; fi
+a was >4
+[login3 stc2019:14] a=
+[login3 stc2019:15] if [ $a = 5 ] ; then echo "a was 5" ; else echo "a was something else" ; fi
+-bash: [: =: unary operator expected
+a was something else
+[login3 stc2019:16] # this was because there was no string on the left:
+[login3 stc2019:16] if [ "$a" = 5 ] ; then echo "a was 5" ; else echo "a was something else" ; fi
+a was something else
+[login3 stc2019:17] # there are many built-in variables:
+[login3 stc2019:17] env
+TACC_GIT_BIN=/opt/apps/git/2.9.0/bin
+MKLROOT=/opt/intel/compilers_and_libraries_2018.2.199/linux/mkl
+
+##
+## et cetera et cetera
+##
+
+[login3 stc2019:18] env | less
+[login3 stc2019:19] env | less
+[login3 stc2019:20] # find all the variables with TACC in the name
+[login3 stc2019:20] # also: TACC or tacc
+[login3 stc2019:20] env | grep TACC
+TACC_GIT_BIN=/opt/apps/git/2.9.0/bin
+TACC_IMPI_DIR=/opt/intel/compilers_and_libraries_2018.2.199/linux/mpi
+
+##
+## et cetera et cetera
+##
+
+[login3 stc2019:21] env | grep TACC | wc -l
+49
+[login3 stc2019:22] # search for lowercase:
+[login3 stc2019:22] env | grep tacc
+
+[login3 stc2019:26] # to search for both upper & lower case
+[login3 stc2019:26] # use grep -i
+[login3 stc2019:26] env | grep -i tacc
+TACC_GIT_BIN=/opt/apps/git/2.9.0/bin
+TACC_IMPI_DIR=/opt/intel/compilers_and_libraries_2018.2.199/linux/mpi
+TACC_CMAKE_BIN=/opt/apps/cmake/3.10.2/bin
+TACC_XALT_DIR=/opt/apps/xalt/xalt/
+TACC_INTEL_INC=/opt/intel/compilers_and_libraries_2018.2.199/linux/compiler/include/intel64
+HOSTNAME=login3.stampede2.tacc.utexas.edu
+TACC_LIBFABRIC_BIN=/opt/apps/libfabric/1.7.0/bin
+TACC_INTEL_DIR=/opt/intel/compilers_and_libraries_2018.2.199/linux
+TACC_IMPI_BIN=/opt/intel/compilers_and_libraries_2018.2.199/linux/mpi/intel64/bin
+TACC_LIBFABRIC_DIR=/opt/apps/libfabric/1.7.0
+LMOD_SYSTEM_DEFAULT_MODULES=TACC
+TACC_LIBFABRIC_INC=/opt/apps/libfabric/1.7.0/include
+TACC_PYTHON2_INC=/opt/apps/intel18/python2/2.7.15/include
+TACC_FAMILY_COMPILER_VERSION=18.0.2
+__LMOD_REF_COUNT_LOADEDMODULES=intel/18.0.2:1;libfabric/1.7.0:1;impi/18.0.2:1;git/2.9.0:1;autotools/1.1:1;python2/2.7.15:1;cmake/3.10.2:1;xalt/2.6.5:1;TACC:1
+TACC_INTEL_BIN=/opt/intel/compilers_and_libraries_2018.2.199/linux/bin/intel64
+TACC_IMPI_INC=/opt/intel/compilers_and_libraries_2018.2.199/linux/mpi/intel64/include
+TACC_XALT_BIN=/opt/apps/xalt/xalt/bin
+TACC_MKL_LIB=/opt/intel/compilers_and_libraries_2018.2.199/linux/mkl/lib/intel64
+TACC_GIT_DIR=/opt/apps/git/2.9.0
+__LMOD_REF_COUNT__LMFILES_=/opt/apps/modulefiles/intel/18.0.2.lua:1;/opt/apps/modulefiles/libfabric/1.7.0.lua:1;/opt/apps/intel18/modulefiles/impi/18.0.2.lua:1;/opt/apps/modulefiles/git/2.9.0.lua:1;/opt/apps/modulefiles/autotools/1.1.lua:1;/opt/apps/intel18/impi18_0/modulefiles/python2/2.7.15.lua:1;/opt/apps/modulefiles/cmake/3.10.2.lua:1;/opt/apps/modulefiles/xalt/2.6.5.lua:1;/opt/apps/modulefiles/TACC.lua:1
+TACC_PYTHON2_MAN=/opt/apps/intel18/python2/2.7.15/share/man:/opt/apps/intel18/python2/2.7.15/man
+TACC_PYTHON2_BIN=/opt/apps/intel18/python2/2.7.15/bin
+TACC_FAMILY_PYTHON=python2
+ARCHIVER=ranch.tacc.utexas.edu
+TACC_SYSTEM=stampede2
+TACC_PYTHON2_DIR=/opt/apps/intel18/python2/2.7.15
+TACC_GIT_LIB=/opt/apps/git/2.9.0/lib
+TACCINFO=/usr/local/etc/taccinfo
+TACC_LIBFABRIC_LIB=/opt/apps/libfabric/1.7.0/lib
+_LMFILES_=/opt/apps/modulefiles/intel/18.0.2.lua:/opt/apps/modulefiles/libfabric/1.7.0.lua:/opt/apps/intel18/modulefiles/impi/18.0.2.lua:/opt/apps/modulefiles/git/2.9.0.lua:/opt/apps/modulefiles/autotools/1.1.lua:/opt/apps/intel18/impi18_0/modulefiles/python2/2.7.15.lua:/opt/apps/modulefiles/cmake/3.10.2.lua:/opt/apps/modulefiles/xalt/2.6.5.lua:/opt/apps/modulefiles/TACC.lua
+TACC_FAMILY_PYTHON_VERSION=2.7.15
+LOADEDMODULES=intel/18.0.2:libfabric/1.7.0:impi/18.0.2:git/2.9.0:autotools/1.1:python2/2.7.15:cmake/3.10.2:xalt/2.6.5:TACC
+TACC_VEC_FLAGS=-xCORE-AVX2 -axCORE-AVX512,MIC-AVX512
+TACC_MKL_INC=/opt/intel/compilers_and_libraries_2018.2.199/linux/mkl/include
+TACC_AUTOTOOLS_DIR=/opt/apps/autotools/1.1
+TACC_PYTHON_VER=2.7
+TACC_INTEL_LIB=/opt/intel/compilers_and_libraries_2018.2.199/linux/compiler/lib/intel64
+TACC_FAMILY_COMPILER=intel
+TACC_DOMAIN=stampede2
+BASH_ENV=/etc/tacc/tacc_functions
+TACC_FAMILY_MPI=impi
+TACC_PYTHON2_LIB=/opt/apps/intel18/python2/2.7.15/lib
+TACC_IMPI_LIB=/opt/intel/compilers_and_libraries_2018.2.199/linux/mpi/intel64/lib
+TACC_FAMILY_MPI_VERSION=18.0.2
+TACC_AUTOTOOLS_BIN=/opt/apps/autotools/1.1/bin
+TACC_MPI_GETMODE=impi_hydra
+TACC_MKL_DIR=/opt/intel/compilers_and_libraries_2018.2.199/linux/mkl
+TACC_CMAKE_DIR=/opt/apps/cmake/3.10.2
+[login3 stc2019:27] env | grep -i tacc | wc -l
+49
+[login3 stc2019:28] # you don't loop over numbers: you loop over
+[login3 stc2019:28] # a collection of strings.
+[login3 stc2019:28] for i in a b c dd eeee ffffff ; do echo $i ; done
+a
+b
+c
+dd
+eeee
+ffffff
+[login3 stc2019:29] # let's say I have a bunc of programs:
+[login3 stc2019:29] touch a.c
+[login3 stc2019:30] touch b.c
+[login3 stc2019:31] touch d.F
+[login3 stc2019:32] touch e.F
+[login3 stc2019:33] # my directory is getting to be a mess
+[login3 stc2019:33] ls
+a.c  b.c  d.F  e.F
+[login3 stc2019:34] # so I create a subdirectory for all my C programs:
+[login3 stc2019:34] mkdir c_programs
+[login3 stc2019:35] # this is not the easiest solution:
+[login3 stc2019:35] # you could just cp or mv
+[login3 stc2019:35] for c in *.c ; do cp $c c_programs/ ; done
+[login3 stc2019:36] ^cp^mv
+for c in *.c ; do mv $c c_programs/ ; done
+[login3 stc2019:37] ls
+c_programs  d.F  e.F
+[login3 stc2019:38] # let's say I do't doFortran any more, so
+[login3 stc2019:38] # I want to backup my Fortran programs
+[login3 stc2019:38] mkdir fortran_backup
+[login3 stc2019:39] for f in *.F ; do mv $f fortran_backup/${f}bak ; done
+[login3 stc2019:40] # let's check:P
+[login3 stc2019:40] ls fortran_backup/
+d.Fbak	e.Fbak
+[login3 stc2019:41] # if you really want to do numerical looping:
+[login3 stc2019:41] seq 1 10
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+[login3 stc2019:42] # naive attempt at using this:
+[login3 stc2019:42] for n in seq 1 10 ; do echo $n ; done
+seq
+1
+10
+[login3 stc2019:43] # next trick in the bag: backquote or backtick
+[login3 stc2019:43] echo "seq 1 10"
+seq 1 10
+[login3 stc2019:44] echo " `seq 1 10` "
+ 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+ 10
+ [login3 stc2019:45] # sorry about the newlines: for doesn't care about that.
+ [login3 stc2019:45] for n in `seq 1 10` ; do echo $n ; done
+ 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+ 10
+ [login3 stc2019:46] # this is too trivial:
+ [login3 stc2019:46] for n in `seq 1 10` ; do echo ${n}${n} ; done
+ 11
+ 22
+ 33
+ 44
+ 55
+ 66
+ 77
+ 88
+ 99
+ 1010
+ [login3 stc2019:47] # exercise:
+ [login3 stc2019:47] # if the number of people on the systme is more than 100
+ [login3 stc2019:47] # say "it is a busy day"
+ [login3 stc2019:47] # otherwise say "it is a quiet day"
+ [login3 stc2019:47] # reminder: if [ sometest ] ; then statements ; else statements ; fi
+ [login3 stc2019:47] # note that this is a numerical test, so don't use > < = which are text tests
+ [login3 stc2019:47] # use -gt -eq -le et cetera
+ [login3 stc2019:47]
+ [login3 stc2019:47] # first: find how many people on the system:
+ [login3 stc2019:47] who | wc -l
+ 184
+ [login3 stc2019:48] # and now put that in the test:
+ [login3 stc2019:48] if [ who | wc -l -gt 100 ] ; then echo "busy" ; fi
+ -bash: [: missing `]'
+ wc: invalid option -- 'g'
+ Try 'wc --help' for more information.
+ [login3 stc2019:49] # the problem is that you want to evaluate that pipeline first.
+ [login3 stc2019:49] # backquotes to the rescue:
+ [login3 stc2019:49] !if:p
+ if [ who | wc -l -gt 100 ] ; then echo "busy" ; fi
+ [login3 stc2019:49] if [ `who | wc -l` -gt 100 ] ; then echo "busy" ; fi
+ busy
+ [login3 stc2019:50] # let's move to shell scripts
+ [login3 stc2019:50] # those are like programs
+ [login3 stc2019:50] emacs hello.sh
+ [login3 stc2019:51] # emacs is my favorite editor
+ [login3 stc2019:51] # other people use vi or vim
+ [login3 stc2019:51] fg
+ -bash: fg: current: no such job
+ [login3 stc2019:52] !em
+ emacs hello.sh
+ [login3 stc2019:53] # so now I have this script:
+ [login3 stc2019:53] cat hello.sh
+ #!/bin/bash
+
+echo "hello world!"
+[login3 stc2019:54] # let's execute it:
+[login3 stc2019:54] hello.sh
+-bash: ./hello.sh: Permission denied
+
+[login3 stc2019:57] hello.sh
+-bash: hello.sh: command not found
+[login3 stc2019:58] # why not found?
+[login3 stc2019:58] # the shell uses $PATH to find its programs
+[login3 stc2019:58] # so let's explicitly tell bash to execute in the current direvtory:
+[login3 stc2019:58] ./hello.sh
+-bash: ./hello.sh: Permission denied
+[login3 stc2019:59] ls -l !$
+ls -l ./hello.sh
+-rw------- 1 eijkhout G-25072 33 Sep 10 14:46 ./hello.sh
+[login3 stc2019:60] # clearly this is not executable: the "x" permission is missing
+[login3 stc2019:60] # let's add it
+[login3 stc2019:60] chmod +x hello.sh
+[login3 stc2019:61] # that should fix it:
+[login3 stc2019:61] ./hello.sh
+hello world!
+[login3 stc2019:62] # let's make this more interactive by making the echo string variable
+[login3 stc2019:62] cp hello.sh say.sh
+[login3 stc2019:63] fg
+-bash: fg: current: no such job
+[login3 stc2019:64] emacs say.sh
+
+[1]+  Stopped                 emacs say.sh
+[login3 stc2019:65] # I want to use this sript as follows:
+[login3 stc2019:65] #
+[login3 stc2019:65] #   ./say.sh "say something nice"
+[login3 stc2019:65] #
+[login3 stc2019:65] fg
+emacs say.sh
+
+[1]+  Stopped                 emacs say.sh
+[login3 stc2019:66] cat say.sh
+#!/bin/bash
+
+echo $1
+
+[login3 stc2019:67] ./say.sh "say something nice"
+say something nice
+[login3 stc2019:68] # maybe we should complain if there was no string
+[login3 stc2019:68] ./say.sh
+
+[login3 stc2019:69] fg
+emacs say.sh
+
+[1]+  Stopped                 emacs say.sh
+[login3 stc2019:70] ./say.sh
+Usage: ./say.sh "some string"
+[login3 stc2019:71] cat say.sh
+#!/bin/bash
+
+if [ $# -eq 0 ] ; then
+    echo "Usage: ./say.sh \"some string\""
+        exit 1
+	fi
+
+echo $1
+
+[login3 stc2019:72] # it is also customary to accept a "-h" string for getting help
+[login3 stc2019:72] # exercise: doing "./say.sh -h" should also give help information
+[login3 stc2019:72] fg
+emacs say.sh
+
+[1]+  Stopped                 emacs say.sh
+[login3 stc2019:73] # I really wanted you to do this:
+[login3 stc2019:73] # if you use:
+[login3 stc2019:73] #
+[login3 stc2019:73] #    ./say.sh -u "something nice"
+[login3 stc2019:73]
+[login3 stc2019:73] # then it uses uppercase
+[login3 stc2019:73] fg
+emacs say.sh
+
+[1]+  Stopped                 emacs say.sh
+[login3 stc2019:74] # source:
+[login3 stc2019:74] cat say.sh
+#!/bin/bash
+
+if [ $# -eq 0 ] ; then
+    echo "Usage: ./say.sh \"some string\""
+        exit 1
+	fi
+
+if [ $1 = "-u" ] ; then
+  echo $2 | tr a-z A-Z
+  else
+    echo $1
+    fi
+    [login3 stc2019:75] ./say.sh "something"
+    something
+    [login3 stc2019:76] ./say.sh -u "something"
+    SOMETHING
+    [login3 stc2019:77] # ok, it does what it is suppsed to
+    [login3 stc2019:77] # but it's not exactly elegant
+    [login3 stc2019:77] fg
+    emacs say.sh
+
+[1]+  Stopped                 emacs say.sh
+[login3 stc2019:78] # first attempt
+[login3 stc2019:78] !cat
+cat say.sh
+#!/bin/bash
+
+if [ $# -eq 0 ] ; then
+    echo "Usage: ./say.sh \"some string\""
+        exit 1
+	fi
+
+upper=0
+if [ $1 = "-u" ] ; then
+  upper=1
+    string=$2
+    else
+      string=$1
+      fi
+
+if [ $upper -eq 1 ] ; then
+    echo $string | tr a-z A-Z
+    else
+        echo $string
+	fi
+	[login3 stc2019:79] # but we can do better:
+	[login3 stc2019:79] fg
+	emacs say.sh
+
+[1]+  Stopped                 emacs say.sh
+[login3 stc2019:80] # better, using shift:
+[login3 stc2019:80] !cat
+cat say.sh
+#!/bin/bash
+
+if [ $# -eq 0 ] ; then
+    echo "Usage: ./say.sh \"some string\""
+        exit 1
+	fi
+
+upper=0
+if [ $1 = "-u" ] ; then
+  upper=1
+    shift
+    fi
+    string=$1
+
+if [ $upper -eq 1 ] ; then
+    echo $string | tr a-z A-Z
+    else
+        echo $string
+	fi
+	[login3 stc2019:81] # for the ultimate:
+	[login3 stc2019:81] fg
+	emacs say.sh
+
+[1]+  Stopped                 emacs say.sh
+[login3 stc2019:82] !cat
+cat say.sh
+#!/bin/bash
+
+if [ $# -eq 0 ] ; then
+    echo "Usage: ./say.sh [ -u ] [ -n 123 ] \"some string\""
+        exit 1
+	fi
+
+upper=0
+n=1
+while [ $# -gt 1 ] ; do
+    if [ $1 = "-u" ] ; then
+       upper=1
+       shift
+    else if [ $1 = "-n" ] ; then
+       shift
+       n=$1
+       shift
+    fi
+done
+string=$1
+
+for i in `seq 1 n` ; do 
+  if [ $upper -eq 1 ] ; then
+      echo $string | tr a-z A-Z
+  else
+      echo $string
+  fi
+done
+
