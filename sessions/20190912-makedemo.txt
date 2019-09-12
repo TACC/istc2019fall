@@ -1,0 +1,463 @@
+[login1 make_demo:7] # let's start with a C program
+[login1 make_demo:7] emacs main.c
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:8] cat main.c
+#include <stdlib.h>
+#include <stdio.h>
+
+int main() {
+  printf("Hello world!\n");
+    return 0;
+    }
+
+[login1 make_demo:9] icpc -o program main.c
+[login1 make_demo:10] ./program
+Hello world!
+[login1 make_demo:11] # that 1. compile step 2. execute
+[login1 make_demo:11] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:12] # i've changed my program, so I recompile
+[login1 make_demo:12] !ic
+icpc -o program main.c
+[login1 make_demo:13] # after a while I get tired of recompiling.
+
+[login1 make_demo:15] cat Makefile
+# this is a file to make my program
+
+program :
+	icpc -o program main.c
+	# note: the previous line started with <TAB>
+
+[login1 make_demo:16] # now lets use this makefile:
+[login1 make_demo:17] rm program
+[login1 make_demo:18] # this is the 'scratch' position: program does not exist yet
+[login1 make_demo:18] make program
+icpc -o program main.c
+[login1 make_demo:19] # and it did what it said in the makefile
+[login1 make_demo:19] # now let's do that again:
+[login1 make_demo:19] make program
+make: `program' is up to date.
+[login1 make_demo:20] # ok, let's edit the program
+[login1 make_demo:21] # my program has changed:
+[login1 make_demo:21] cat main.c
+#include <stdlib.h>
+#include <stdio.h>
+
+int main() {
+  printf("Goodbye cruel world!\n");
+    return 0;
+    }
+[login1 make_demo:22] # and now I do:
+[login1 make_demo:22] make program
+make: `program' is up to date.
+[login1 make_demo:23] # I have to tell ake when it needs to update:
+[login1 make_demo:24] #updated makefile has dependency on main.c
+[login1 make_demo:24] cat Makefile
+# this is a file to make my program
+
+program : main.c
+	icpc -o program main.c
+	# note: the previous line started with <TAB>
+
+[login1 make_demo:25] make program
+icpc -o program main.c
+[login1 make_demo:26] make program
+make: `program' is up to date.
+
+[login1 make_demo:31] # separate compilation:
+[login1 make_demo:31] icpc -c main.c
+[login1 make_demo:32] ls
+main.c	main.c~  main.o  Makefile  Makefile~  program*
+[login1 make_demo:33] file main.o
+main.o: ELF 64-bit LSB relocatable, x86-64, version 1 (GNU/Linux), not stripped
+[login1 make_demo:34] file main.c
+main.c: C source, ASCII text
+[login1 make_demo:35] # main.o is an object file: binary but not executable
+[login1 make_demo:35] # to get a executable, you need to "link" it.
+[login1 make_demo:35] # confusingly, the linker is the compiler
+[login1 make_demo:35] icpc -o program main.o
+[login1 make_demo:36] # what's the point here?
+[login1 make_demo:36] # well......
+[login1 make_demo:36] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:37] # now I have a function:
+[login1 make_demo:37] cat function.c
+int f() { return 5; }
+[login1 make_demo:38] # and the main uses the function:
+[login1 make_demo:38] cat main.c
+#include <stdlib.h>
+#include <stdio.h>
+
+int f();
+int main() {
+  int code = f();
+    printf("Goodbye cruel world %d.\n",code);
+      return 0;
+      }
+
+[login1 make_demo:39] # now separate compilation:
+[login1 make_demo:39] icpc -c main.c
+[login1 make_demo:40] ^main^function
+icpc -c function.c
+[login1 make_demo:41] # this gives me two objet files
+[login1 make_demo:41] ls
+function.c  function.o	main.c	main.c~  main.o  Makefile  Makefile~  program*
+[login1 make_demo:42] # and now I can link them together:
+[login1 make_demo:42] icpc -o program main.o function.o
+[login1 make_demo:43] # I get tired of typing, so let's put this in the makefile
+[login1 make_demo:43] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:44] cat Makefile
+# this is a file to make my program
+
+# if main.c is more recent than program,
+# regenerate program
+program : main.o function.o
+	icpc -o program main.o function.o
+	# separate compilation
+main.o : main.c
+     icpc -c main.c
+     function.o : function.c
+   		  icpc -c function.c
+
+# note: the previous line started with <TAB>
+[login1 make_demo:45] # let's start with a blank slate:
+[login1 make_demo:45] rm program *.o
+[login1 make_demo:46] # now make:
+[login1 make_demo:46] make program
+icpc -c main.c
+icpc -c function.c
+icpc -o program main.o function.o
+[login1 make_demo:47] ./program
+Goodbye cruel world 5.
+[login1 make_demo:48] # let's change the function:
+[login1 make_demo:48] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:49] cat function.c
+int f() { return 6; }
+[login1 make_demo:50] # can we sucessfully recreate program?
+[login1 make_demo:50] make program
+icpc -c function.c
+icpc -o program main.o function.o
+[login1 make_demo:51] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:52] rm *.o
+[login1 make_demo:53] rm program
+[login1 make_demo:54] make program
+icpc -c main.c
+icpc -c function.c
+icpc -o program main.o function.o
+[login1 make_demo:55] # now the maefile uses a "template rule"
+[login1 make_demo:55] cat Makefile
+# this is a file to make my program
+
+# if main.c is more recent than program,
+# regenerate program
+program : main.o function.o
+	icpc -o program main.o function.o
+# separate compilation
+%.o : %.c
+    icpc -c $^
+
+### crude early version:
+# main.o : main.c
+# 	 icpc -c main.c
+# function.o : function.c
+# 	     icpc -c function.c
+
+# note: the previous line started with <TAB>
+[login1 make_demo:56] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:57] # now we have a header file:
+[login1 make_demo:57] cat demo.h
+int f();
+[login1 make_demo:58] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:59] # I have changed my function
+[login1 make_demo:59] cat function.c
+#include "demo.h"
+
+int f(int i) { return 6+i; }
+[login1 make_demo:60] make program
+icpc -c main.c
+icpc -c function.c
+icpc -o program main.o function.o
+main.o: In function `main':
+main.c:(.text+0x2b): undefined reference to `f()'
+make: *** [program] Error 1
+[login1 make_demo:61] # I've been using the wrong compiler:
+[login1 make_demo:61] # icpc is the C++
+[login1 make_demo:61] # I meant to use the C compiler:
+[login1 make_demo:61] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:62] # I want to start from scratch, but I get tired of the rm typing
+[login1 make_demo:62] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:63] make clean
+rm -f program *.o
+[login1 make_demo:64] make clean
+rm -f program *.o
+[login1 make_demo:65] # try out the new compiler
+[login1 make_demo:65] make program
+icc -c main.c
+icc -c function.c
+icc -o program main.o function.o
+[login1 make_demo:66] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:67] ./program
+Goodbye cruel world 6.
+[login1 make_demo:68] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:69] make clean
+rm -f program *.o
+[login1 make_demo:70] make program
+icc -c main.c
+icc -c function.c
+function.c(3): warning #147: declaration is incompatible with "int f(void)" (declared at line 1 of "demo.h")
+  int f(int i) { return 6+i; }
+        ^
+
+icc -o program main.o function.o
+[login1 make_demo:71] # what's the deal? my prototype is incompatible with the function
+[login1 make_demo:71] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:72] # I edit my prototype:
+[login1 make_demo:72] cat demo.h
+int f(int);
+[login1 make_demo:73] # and now it should work
+[login1 make_demo:73] make program
+make: `program' is up to date.
+[login1 make_demo:74] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:75] make program
+icc -c main.c demo.h
+main.c(7): error #165: too few arguments in function call
+    int code = f();
+                     ^
+
+compilation aborted for main.c (code 2)
+make: *** [main.o] Error 2
+[login1 make_demo:76] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:77] make program
+icc -c main.c demo.h
+icc -c function.c demo.h
+icc -o program main.o function.o
+[login1 make_demo:78] ./program
+Goodbye cruel world 9.
+[login1 make_demo:79] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:80] # makefile with macro for the compiler:
+[login1 make_demo:80] cat Makefile
+# this is a file to make my program
+
+# to make the makefile less dependent on the compiler:
+# use a macro:
+CC = icc
+
+# if main.c is more recent than program,
+# regenerate program
+program : main.o function.o
+	${CC} -o program main.o function.o
+# separate compilation
+%.o : %.c
+    ${CC} -c $^
+    # declare dependencies on the header:
+    main.o function.o : demo.h
+
+clean :
+      rm -f program *.o
+
+### crude early version:
+# main.o : main.c
+# 	 icc -c main.c
+# function.o : function.c
+# 	     icc -c function.c
+
+# note: the previous line started with <TAB>
+[login1 make_demo:81] make clean
+rm -f program *.o
+[login1 make_demo:82] make program
+icc -c main.c demo.h
+icc -c function.c demo.h
+icc -o program main.o function.o
+[login1 make_demo:83] # let's use a different compiler:
+[login1 make_demo:83] make clean
+rm -f program *.o
+[login1 make_demo:84] make CC=gcc program
+gcc -c main.c demo.h
+gcc -c function.c demo.h
+gcc -o program main.o function.o
+[login1 make_demo:85] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:86] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:87] cat Makefile | awk 'NR>=9 && NR<=11 {print}'
+program : main.o function.o
+	${CC} -o program main.o function.o
+      rm -f *.o
+[login1 make_demo:88] # that was just to display a few lines.
+[login1 make_demo:88] make program
+make: `program' is up to date.
+[login1 make_demo:89] make clean
+rm -f program *.o
+[login1 make_demo:90] make program
+icc -c main.c demo.h
+icc -c function.c demo.h
+icc -o program main.o function.o
+rm -f *.o
+[login1 make_demo:91] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:92] make program
+icc -c main.c demo.h
+icc -c function.c demo.h
+icc -o program main.o function.o
+[login1 make_demo:93] echo 7 | ./program
+Goodbye cruel world 13.
+[login1 make_demo:94] # I have now altered my program to take an input
+[login1 make_demo:94] cat main.c
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "demo.h"
+
+int main() {
+  int incode;
+    scanf("%d",&incode);
+      int code = f(incode);
+        printf("Goodbye cruel world %d.\n",code);
+	  return 0;
+	  }
+[login1 make_demo:95] # now suppose I want to test my program:
+[login1 make_demo:95] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:96] make test
+for i in 1 2 4 8 10 17 ; do \
+  echo $i | ./program ; \
+  done
+  Goodbye cruel world 7.
+  Goodbye cruel world 8.
+  Goodbye cruel world 10.
+  Goodbye cruel world 14.
+  Goodbye cruel world 16.
+  Goodbye cruel world 23.
+  [login1 make_demo:97] fg
+  emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:98] make clean
+rm -f program *.o
+[login1 make_demo:99] make test
+for i in 1 2 4 8 10 17 ; do \
+  echo $i | ./program ; \
+  done
+  /bin/sh: line 1: ./program: No such file or directory
+  /bin/sh: line 1: ./program: No such file or directory
+  /bin/sh: line 1: ./program: No such file or directory
+  /bin/sh: line 1: ./program: No such file or directory
+  /bin/sh: line 1: ./program: No such file or directory
+  /bin/sh: line 1: ./program: No such file or directory
+  make: *** [test] Error 127
+[login1 make_demo:100] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:101] make test
+icc -c main.c demo.h
+icc -c function.c demo.h
+icc -o program main.o function.o
+for i in 1 2 4 8 10 17 ; do \
+  echo $i | ./program ; \
+  done
+  Goodbye cruel world 7.
+  Goodbye cruel world 8.
+  Goodbye cruel world 10.
+  Goodbye cruel world 14.
+  Goodbye cruel world 16.
+  Goodbye cruel world 23.
+[login1 make_demo:102] fg
+emacs main.c
+
+[1]+  Stopped                 emacs main.c
+[login1 make_demo:103] ### now for something completely different
+[login1 make_demo:103] # diff!
+[login1 make_demo:103] cp main.c ..
+[login1 make_demo:104] cd ..
+[login1 stc2019:105] cat main.c
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "demo.h"
+
+int main() {
+  int incode;
+    scanf("%d",&incode);
+      int code = f(incode);
+        printf("Goodbye cruel world %d.\n",code);
+	  return 0;
+	  }
+[login1 stc2019:106] emacs main.c
+
+[2]+  Stopped                 emacs main.c
+[login1 stc2019:107] diff main.c bain.c
+8a9
+>   int meaningless;
+[login1 stc2019:108] diff bain.c main.c
+9d8
+<   int meaningless;
+[login1 stc2019:109] # homework: students have a file
+[login1 stc2019:109] touch submission.txt
+[login1 stc2019:110] # and they can submit that with
+[login1 stc2019:110] # this command: STCsubmit submission.txt
+[login1 stc2019:110] # since we're simulating this,
+[login1 stc2019:110] # let the STCsubmit script only copy the submission to a
+[login1 stc2019:110] # directory.
+[login1 stc2019:110] #
+[login1 stc2019:110] # Scenario:
+[login1 stc2019:110] # student 1 submits a file
+[login1 stc2019:110] # studnet 2 is a cheater and submits the same file
+[login1 stc2019:110] # in that case, your STCsubmit script should detect
+[login1 stc2019:110] # that this "new" submission is actually a copy of
+[login1 stc2019:110] # an old one.
+[login1 stc2019:110] touch bubsisssion.txt
+[login1 stc2019:111] #student1 STCsubmit submission.txt
+[login1 stc2019:111] #student2 STCsubmit bubsission.txt
+[login1 stc2019:111]~
