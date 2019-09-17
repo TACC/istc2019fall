@@ -1,0 +1,187 @@
+[login2 ~:2] cd stc2019/
+[login2 stc2019:3] ls
+bain.c		 c_programs/	  hello.sh*  make_demo/  say.sh~*
+bubsisssion.txt  fortran_backup/  main.c     say.sh*	 submission.txt
+[login2 stc2019:4] mkdir binary
+[login2 stc2019:5] clear
+[login2 stc2019:6] # let's make a main program and file with a function
+[login2 stc2019:6] emacs cmain.c cfunc.c
+
+[1]+  Stopped                 emacs cmain.c cfunc.c
+[login2 stc2019:7] ls
+bain.c		 cfunc.c      fortran_backup/  make_demo/  submission.txt
+binary/		 cmain.c      hello.sh*        say.sh*
+bubsisssion.txt  c_programs/  main.c	       say.sh~*
+[login2 stc2019:8] ls c*.c
+cfunc.c  cmain.c
+[login2 stc2019:9] mv c*.c binary/
+[login2 stc2019:10] cd !$
+cd binary/
+[login2 binary:11] # now we're in the right directory
+[login2 binary:11] ls
+cfunc.c  cmain.c
+[login2 binary:12] icc -o cprogram cmain.c cfunc.c
+[login2 binary:13] ./cprogram
+function value: 37
+[login2 binary:14] cat cmain.c
+#include <stdlib.h>
+#include <stdio.h>
+
+int f();
+
+int main() {
+  printf("function value: %d\n",f());
+  return 0;
+}
+[login2 binary:15] cat cfunc.c
+int f() { return 37; }
+[login2 binary:16] # you can compile everything in one go:
+[login2 binary:16] icc -o cprogram cmain.c cfunc.c
+[login2 binary:17] # but you can also use separate compilation
+[login2 binary:17] icc -c cfunc.c
+[login2 binary:18] # now the compiler only does compilation: "-c" flag
+[login2 binary:18] # and the result is:
+[login2 binary:18] ls
+cfunc.c  cfunc.o  cmain.c  cprogram*
+[login2 binary:19] # same with the main:
+[login2 binary:19] !icc:s/func/main/
+icc -c cmain.c
+[login2 binary:20] # now we have two object files:
+[login2 binary:20] ls
+cfunc.c  cfunc.o  cmain.c  cmain.o  cprogram*
+[login2 binary:21] # and no program
+[login2 binary:21] rm cprogram
+[login2 binary:22] # object files:
+[login2 binary:22] ls
+cfunc.c  cfunc.o  cmain.c  cmain.o
+[login2 binary:23] # I need to "link" my object files to an executable
+[login2 binary:23] # cofusing, the linker is the compiler
+[login2 binary:23] icc -o cprogram cmain.o cfunc.o
+[login2 binary:24] ./cprogram
+function value: 37
+[login2 binary:25] # do't do : cat cfunc.o because it's rubbish
+[login2 binary:25] # I can still inspect the object file:
+[login2 binary:25] nm cfunc.o
+0000000000000000 T f
+[login2 binary:26] # this says that cfunc.o contains the definition of "f"
+[login2 binary:26] # I can tell by the T
+[login2 binary:26] # let's do that with the main object file:
+[login2 binary:26] nm cmain.o
+                 U f
+                 U __intel_new_feature_proc_init
+0000000000000000 T main
+                 U printf
+[login2 binary:27] # by the "U" you can tell that main does not
+[login2 binary:27] # hvae the definitions for 1. f 2. printf 3. something intel-ish
+[login2 binary:27] # 2 nd 3 are resolved by the linker
+[login2 binary:27] # but 1 is important: it means that you need a file that provides f
+[login2 binary:27]
+[login2 binary:27] # let's suppose I have 500 object files that all need to go
+[login2 binary:27] # be linked into the main
+[login2 binary:27] # let's start making a library
+[login2 binary:27] mkdir libs
+[login2 binary:28] emacs
+[login2 binary:29] fg
+emacs cmain.c cfunc.c	(wd: ~/stc2019)
+[login2 binary:30] emacs *.c
+
+[1]+  Stopped                 emacs *.c
+[login2 binary:31] # ok, now I have a main and *two* auxiliary files:
+[login2 binary:31] cat cmain.c
+#include <stdlib.h>
+#include <stdio.h>
+
+int f();
+int g();
+
+int main() {
+  printf("function values: %d, %d\n",
+	 f(),g());
+  return 0;
+}
+[login2 binary:32] cat cfunc.c
+int f() { return 37; }
+[login2 binary:33] cat cbunc.c
+int g() { return 51; }
+[login2 binary:34] # I don't want to type long commandlines:
+[login2 binary:34] for f in cfunc cbunc ; do icc -c ${f}.c ; done
+[login2 binary:35] # bundle them into a library:
+[login2 binary:35] for f in cfunc cbunc ; do ar cr libs/libdemo.a ${f}.o ; done
+[login2 binary:36] # I have just created a library:
+[login2 binary:36] ls libs
+libdemo.a
+[login2 binary:37] # "ar" stands for "archive"
+[login2 binary:37] # I can inspect the archive with
+[login2 binary:37] nm libs/libdemo.a
+
+cfunc.o:
+0000000000000000 T f
+
+cbunc.o:
+0000000000000000 T g
+[login2 binary:38] # so now I can make my program using this dot-a file:
+[login2 binary:38] icc -o cprogram cmain.o libs/libdemo.a
+[login2 binary:39] ./cprogram
+function value: 37
+[login2 binary:40] icc -c cmain.c
+[login2 binary:41] icc -o cprogram cmain.o libs/libdemo.a
+[login2 binary:42] ./cprogram
+function values: 37, 51
+[login2 binary:43] # I forgot to recompile my main
+[login2 binary:43]
+[login2 binary:43] # convention to indicate the location of the library
+[login2 binary:43] # because often there will be more than one library
+[login2 binary:43] # n that location:
+[login2 binary:43] icc -o cprogram cmain.o -Llibs -ldemo
+[login2 binary:44] ./cprogram
+function values: 37, 51
+[login2 binary:45] # let's remember this this program:
+[login2 binary:45] cp cprogram cprogram.static
+[login2 binary:46] ls -l cprogram
+-rwx------ 1 eijkhout G-25072 23944 Sep 17 14:22 cprogram*
+[login2 binary:47]
+[login2 binary:47] # next we are going to make a dynamic library
+[login2 binary:47] # confusingly, they are make with the compiler, not
+[login2 binary:47] # with any kind of library tool
+[login2 binary:47] icc -shared -o libs/libdemo.so cfunc.o cbunc.o
+[login2 binary:48] # sorry, this is a "shared" library, not dynamic.
+[login2 binary:48]
+[login2 binary:48] # let's build the program using the share lbirary
+[login2 binary:48] # to prevent cofusion, let me rename the shared libary
+[login2 binary:48] mv libs/libdemo.so libs/libshareddemo.so
+[login2 binary:49] !icc:p
+icc -shared -o libs/libdemo.so cfunc.o cbunc.o
+[login2 binary:49] icc -o cprogram cmain.o -Llibs -lshareddemo.so
+/opt/apps/gcc/6.3.0/bin/ld: cannot find -lshareddemo.so
+[login2 binary:50] icc -o cprogram cmain.o -Llibs -lshareddemo
+[login2 binary:51] ./cprogram
+./cprogram: error while loading shared libraries: libshareddemo.so: cannot open shared object file: No such file or directory
+[login2 binary:52] # first of all I had a statically linked program:
+[login2 binary:52] ls -l cprogram.static
+-rwx------ 1 eijkhout G-25072 23944 Sep 17 14:23 cprogram.static*
+[login2 binary:53] # now I have a program that uses the shared library:
+[login2 binary:53] ls -l cprogram
+-rwx------ 1 eijkhout G-25072 23896 Sep 17 14:28 cprogram*
+[login2 binary:54] ldd cprogram
+	linux-vdso.so.1 =>  (0x00007ffe44509000)
+	/opt/apps/xalt/xalt/lib64/libxalt_init.so (0x00002afbcc410000)
+	libshareddemo.so => not found
+	libm.so.6 => /lib64/libm.so.6 (0x00002afbcc63c000)
+	libgcc_s.so.1 => /opt/apps/gcc/6.3.0/lib64/libgcc_s.so.1 (0x00002afbcc93e000)
+	libc.so.6 => /lib64/libc.so.6 (0x00002afbccb55000)
+	libdl.so.2 => /lib64/libdl.so.2 (0x00002afbccf22000)
+	/lib64/ld-linux-x86-64.so.2 (0x00002afbcc1ec000)
+[login2 binary:55] # ldd is how you can tell what libraries a program uses
+[login2 binary:55] # one way you can tell at runtime where the library is:
+[login2 binary:55] echo $LD_LIBRARY_PATH
+/opt/apps/intel18/python2/2.7.15/lib:/opt/intel/compilers_and_libraries_2018.2.199/linux/mpi/intel64/lib:/opt/apps/libfabric/1.7.0/lib:/opt/intel/debugger_2018/libipt/intel64/lib:/opt/intel/debugger_2018/iga/lib:/opt/intel/compilers_and_libraries_2018.2.199/linux/daal/../tbb/lib/intel64_lin/gcc4.4:/opt/intel/compilers_and_libraries_2018.2.199/linux/daal/lib/intel64_lin:/opt/intel/compilers_and_libraries_2018.2.199/linux/tbb/lib/intel64/gcc4.7:/opt/intel/compilers_and_libraries_2018.2.199/linux/mkl/lib/intel64_lin:/opt/intel/compilers_and_libraries_2018.2.199/linux/compiler/lib/intel64_lin:/opt/intel/compilers_and_libraries_2018.2.199/linux/ipp/lib/intel64:/opt/intel/compilers_and_libraries_2018.2.199/linux/compiler/lib/intel64:/opt/apps/gcc/6.3.0/lib64:/opt/apps/gcc/6.3.0/lib
+[login2 binary:56] export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:`pwd`/libs
+[login2 binary:57] # I have now added the libs subirectory to the "load library path"
+[login2 binary:57] !EC
+-bash: !EC: event not found
+[login2 binary:57] !ec
+echo $LD_LIBRARY_PATH
+/opt/apps/intel18/python2/2.7.15/lib:/opt/intel/compilers_and_libraries_2018.2.199/linux/mpi/intel64/lib:/opt/apps/libfabric/1.7.0/lib:/opt/intel/debugger_2018/libipt/intel64/lib:/opt/intel/debugger_2018/iga/lib:/opt/intel/compilers_and_libraries_2018.2.199/linux/daal/../tbb/lib/intel64_lin/gcc4.4:/opt/intel/compilers_and_libraries_2018.2.199/linux/daal/lib/intel64_lin:/opt/intel/compilers_and_libraries_2018.2.199/linux/tbb/lib/intel64/gcc4.7:/opt/intel/compilers_and_libraries_2018.2.199/linux/mkl/lib/intel64_lin:/opt/intel/compilers_and_libraries_2018.2.199/linux/compiler/lib/intel64_lin:/opt/intel/compilers_and_libraries_2018.2.199/linux/ipp/lib/intel64:/opt/intel/compilers_and_libraries_2018.2.199/linux/compiler/lib/intel64:/opt/apps/gcc/6.3.0/lib64:/opt/apps/gcc/6.3.0/lib:/home1/00434/eijkhout/stc2019/binary/libs
+[login2 binary:58] # now I can run the program because the program will
+[login2 binary:58] # consutl the libraries path to find any libs
+[login2 binary:58] # that it dynamically needs to load:

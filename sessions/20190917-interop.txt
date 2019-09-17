@@ -1,0 +1,124 @@
+[login2 binary:58] emacs cfunc.c ffunc.F90
+[login2 binary:59] mkdir ../cf
+[login2 binary:60] cd !$
+cd ../cf
+[login2 cf:61] !em
+emacs cfunc.c ffunc.F90
+
+[2]+  Stopped                 emacs cfunc.c ffunc.F90
+[login2 cf:62] # compile cfunc.c
+[login2 cf:62] icc -c cfunc.c
+[login2 cf:63] nm cfunc.o
+0000000000000000 T f
+[login2 cf:64] ifort -c ffunc.F90
+[login2 cf:65] nm ffunc.o
+0000000000000000 T f_
+[login2 cf:66] fg
+emacs cfunc.c ffunc.F90
+
+[2]+  Stopped                 emacs cfunc.c ffunc.F90
+[login2 cf:67] # first try to call a C function from Fortran
+[login2 cf:67] icc -c fmain.F90
+icc: warning #10145: no action performed for file 'fmain.F90'
+[login2 cf:68] ifort -c fmain.F90
+[login2 cf:69] nm fmain.o
+                 U f_
+                 U for_set_reentrancy
+                 U for_write_seq_lis
+                 U __intel_new_feature_proc_init
+0000000000000000 T MAIN__
+0000000000000000 r __NLITPACK_0.0.1
+0000000000000008 r __NLITPACK_1.0.1
+000000000000000c r __STRLITPACK_0.0.1
+[login2 cf:70] # let's try to link the F main and the C function:
+[login2 cf:70] ifort -o fprogram fmain.o cfunc.o
+fmain.o: In function `MAIN__':
+fmain.F90:(.text+0x3c): undefined reference to `f_'
+[login2 cf:71] # terrible hack coming up:
+[login2 cf:71] fg
+emacs cfunc.c ffunc.F90
+
+[2]+  Stopped                 emacs cfunc.c ffunc.F90
+[login2 cf:72] # i have made a wrapper around the original C function,
+[login2 cf:72] # to provide the trailingunderscore
+[login2 cf:72] cat cfunc.c
+int f(int i) {
+  return 15;
+}
+
+inf f_(int i) {
+  return f(i);
+}
+[login2 cf:73] icc -c cfunc.c
+cfunc.c(5): error: identifier "inf" is undefined
+  inf f_(int i) {
+  ^
+
+compilation aborted for cfunc.c (code 2)
+[login2 cf:74] # typo
+[login2 cf:74] fg
+emacs cfunc.c ffunc.F90
+
+[2]+  Stopped                 emacs cfunc.c ffunc.F90
+[login2 cf:75] icc -c cfunc.c
+[login2 cf:76] !if:p
+ifort -o fprogram fmain.o cfunc.c
+[login2 cf:76] ifort -o fprogram fmain.o cfunc.o
+[login2 cf:77] ./fprogram
+          15
+[login2 cf:78] fg
+emacs cfunc.c ffunc.F90
+
+[2]+  Stopped                 emacs cfunc.c ffunc.F90
+[login2 cf:79] # changed my cfunc:
+[login2 cf:79] cat cfunc.c
+int f(int i) {
+  return 15+i;
+}
+
+int f_(int i) {
+  return f(i);
+}
+[login2 cf:80] icc -c !$
+icc -c cfunc.c
+[login2 cf:81] fg
+emacs cfunc.c ffunc.F90
+
+[2]+  Stopped                 emacs cfunc.c ffunc.F90
+[login2 cf:82] !if
+ifort -o fprogram fmain.o cfunc.o
+[login2 cf:83] ./fprogram
+     4816255
+File Edit Options Buffers Tools C Help
+int f(int i) {                            |int main() {
+  return 15+i;                            |  int i;
+}                                         |  f(&i);
+                                          |  return 0;
+/* Fortran version of this function       |}
+   needs to use pass by reference         |
+*/                                        |
+int f_(int *i) {                          |
+  return f(*i);                           |
+}                                         |
+                                          |
+-UUU:----F1  cfunc.c        All L11    (C/|-UUU:----F1  cmain.c        All L3     (C/l
+  Subroutine f(i)                         |program finterop
+    integer :: i                          |  external f
+    i = 27                                |  integer f
+  end Subroutine f                        |  integer i=5
+                                          |  integer,dimension(2) :: array
+                                          |  print *,f(i)
+                                          |  array(1) =	20 ; array(2) =	21
+                                          |  ! I want a function that zero's the ith e$
+                                          |  call zero_i(array,2)
+                                          |end program finterop
+                                          |
+                                          |
+-UUU:----F1  ffunc.F90      All L3     (F9|-UUU:----F1  fmain.F90      All L7     (F90)
+[login2 cf:84] fg
+emacs cfunc.c ffunc.F90
+
+[2]+  Stopped                 emacs cfunc.c ffunc.F90
+[login2 cf:85] # I have now make a pass-by-reference version of my C function
+[login2 cf:85] # so that it can be used from Fortran
+[login2 cf:85] cat cfunc.c
